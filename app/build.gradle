@@ -17,9 +17,13 @@ repositories {
 dependencies {
     compile 'com.android.support:support-v4:22.2.0'
     compile 'com.google.android.gms:play-services:7.5.0'
+    compile 'com.facebook.android:facebook-android-sdk:4.6.0'
 }
 
 android {
+    defaultConfig {
+        minSdkVersion 15
+    }
     compileSdkVersion 21
     buildToolsVersion "21.1.2"
 }

@@ -26,11 +26,18 @@ import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.UserRecoverableAuthException;
@@ -46,6 +53,7 @@ import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.model.people.Person;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Demonstrates Google Sign-In, retrieval of user's profile information, and
@@ -90,9 +98,14 @@ public class MainActivity extends FragmentActivity implements
     private TextView mStatus;
     private TextView mToken;
 
+    CallbackManager callbackManager;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        FacebookSdk.sdkInitialize(getApplicationContext());
+
         setContentView(R.layout.main_activity);
 
         mStatus = (TextView) findViewById(R.id.sign_in_status);
@@ -121,7 +134,40 @@ public class MainActivity extends FragmentActivity implements
         mServerAuthHandler = new ServerAuthHandler(this, mUIHandler);
 
         mGoogleApiClient = buildGoogleApiClient();
+
+        callbackManager = CallbackManager.Factory.create();
+
+        Button loginButton = (Button) findViewById(R.id.login_button);
+        loginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LoginManager.getInstance().logInWithReadPermissions(MainActivity.this, Arrays.asList("public_profile", "user_friends"));
+            }
+        });
+        // Other app specific specialization
+
+        // Callback registration
+        LoginManager.getInstance().registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                // App code
+                String token = loginResult.getAccessToken().getToken();
+                Log.e(MainActivity.class.getName(), token);
+            }
+
+            @Override
+            public void onCancel() {
+                // App code
+            }
+
+            @Override
+            public void onError(FacebookException exception) {
+                // App code
+            }
+        });
     }
+
+
 
     private GoogleApiClient buildGoogleApiClient() {
         // Build a GoogleApiClient with access to basic profile information.  We also request
@@ -145,13 +191,13 @@ public class MainActivity extends FragmentActivity implements
     @Override
     protected void onStart() {
         super.onStart();
-        mGoogleApiClient.connect();
+        //mGoogleApiClient.connect();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        mGoogleApiClient.disconnect();
+        //mGoogleApiClient.disconnect();
     }
 
     @Override
@@ -182,6 +228,8 @@ public class MainActivity extends FragmentActivity implements
                 }
                 break;
         }
+
+        callbackManager.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
